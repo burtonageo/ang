@@ -25,7 +25,8 @@ fn calc_hypotenuse(opposite: f64, alpha: Angle) -> f64 {
 }
 
 let a = calc_hypotenuse(SQRT_2, Radians(FRAC_PI_4));
-let b = calc_hypotenuse(SQRT_2, Degrees(45.0);
+let b = calc_hypotenuse(SQRT_2, Degrees(45.0));
+let c = calc_hypotenuse(SQRT_2, Angle::eighth());
 
 assert!((a - 2.0).abs() < 1.0e10);
 assert!((a - b).abs() < 1.0e10);

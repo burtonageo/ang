@@ -42,7 +42,7 @@ impl<T: NumCast> Angle<T> {
 impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     /// Create a new angle by normalizing the value into the range of
     /// [0, 2π) rad.
-    pub fn normalized(self) -> Angle<T> {
+    pub fn normalized(self) -> Self {
         let (v, upper) = match self {
             Radians(v) => (v, cast(2.0 * PI).unwrap()),
             Degrees(v) => (v, cast(360.0).unwrap())
@@ -69,7 +69,7 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
 
 impl<T: Signed> Angle<T> {
     /// Compute the absolute angle.
-    pub fn abs(self) -> Angle<T> {
+    pub fn abs(self) -> Self {
         match self {
             Radians(v) => Radians(v.abs()),
             Degrees(v) => Degrees(v.abs())
@@ -131,7 +131,7 @@ impl<T: Float + NumCast> Angle<T> {
 impl<T: Float> Angle<T> {
     /// Compute the arcsine of a number. Return value is in the range of
     /// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
-    pub fn asin(value: T) -> Option<Angle<T>> {
+    pub fn asin(value: T) -> Option<Self> {
         let value = value.asin();
         if value.is_nan() {
             None
@@ -142,7 +142,7 @@ impl<T: Float> Angle<T> {
 
     /// Compute the arccosine of a number. Return value is in the range of
     /// [0, π] rad or `None` if the number is outside the range [-1, 1].
-    pub fn acos(value: T) -> Option<Angle<T>> {
+    pub fn acos(value: T) -> Option<Self> {
         let value = value.acos();
         if value.is_nan() {
             None
@@ -153,12 +153,12 @@ impl<T: Float> Angle<T> {
 
     /// Compute the arctangent of a number. Return value is in the range of
     /// [-π/2, π/2] rad.
-    pub fn atan(value: T) -> Angle<T> {
+    pub fn atan(value: T) -> Self {
         Radians(value.atan())
     }
 
-    // Computes the four quadrant arctangent of `y` and `x`.
-    pub fn atan2(y: T, x: T) -> Angle<T> {
+    /// Compute the four quadrant arctangent of `y` and `x`.
+    pub fn atan2(y: T, x: T) -> Self {
         Radians(y.atan2(x))
     }
 }

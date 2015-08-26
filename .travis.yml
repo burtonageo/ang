@@ -9,4 +9,4 @@ script:
   - cargo test --verbose
 
 after_success:
-  - ./docs.sh
+  - ./.docs.sh

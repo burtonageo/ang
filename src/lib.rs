@@ -222,8 +222,8 @@ macro_rules! math_multiplicative(
     );
 );
 
-math_multiplicative!(Mul, mul, u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
-math_multiplicative!(Div, div, u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
+math_multiplicative!(Mul, mul, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
+math_multiplicative!(Div, div, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
 
 impl<T: Neg> Neg for Angle<T> {
     type Output = Angle<T::Output>;

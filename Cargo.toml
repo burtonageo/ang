@@ -11,9 +11,9 @@ keywords = ["angle", "angular", "geometry", "orientation", "degree", "radian"]
 license = "MIT"
 
 [dependencies]
-num = "*"
+num = "^0.1.27"
 
 [dev-dependencies]
-hamcrest = "*"
-quickcheck = "*"
-quickcheck_macros = "*"
+hamcrest = "^0.1.0"
+quickcheck = "^0.2.21"
+quickcheck_macros = "^0.2.21"

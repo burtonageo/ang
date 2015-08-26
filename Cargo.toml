@@ -16,4 +16,3 @@ num = "^0.1.27"
 [dev-dependencies]
 hamcrest = "^0.1.0"
 quickcheck = "^0.2.21"
-quickcheck_macros = "^0.2.21"

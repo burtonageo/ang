@@ -1,6 +1,3 @@
-#![cfg_attr(test, feature(plugin))]
-#![cfg_attr(test, plugin(quickcheck_macros))]
-
 extern crate num;
 
 #[cfg(test)] extern crate hamcrest;
@@ -275,48 +272,60 @@ pub use Angle::{Radians, Degrees};
 mod tests {
     use hamcrest::{assert_that, is, close_to};
     use num::{Float, cast};
-    use quickcheck::{Arbitrary, Gen};
+    use quickcheck::{Arbitrary, Gen, quickcheck};
     use std::f64::consts::PI;
 
     use super::*;
 
-    #[quickcheck]
-    fn test_angle_conversions(angle: Angle<f64>) -> bool {
-        are_close(angle.in_radians(), Degrees(angle.in_degrees()).in_radians())
-    }
-
-    #[quickcheck]
-    fn test_angle_math_multiplicative(a: Angle<f64>, x: f64) -> bool {
-        match a {
-            Radians(v) => (a * x).in_radians() == v * x &&
-                          (a / x).in_radians() == v / x,
-            Degrees(v) => (a * x).in_degrees() == v * x &&
-                          (a / x).in_degrees() == v / x
+    #[test]
+    fn test_angle_conversions() {
+        fn prop(angle: Angle) -> bool {
+            are_close(angle.in_radians(), Degrees(angle.in_degrees()).in_radians())
         }
+        quickcheck(prop as fn(Angle) -> bool);
     }
 
-    #[quickcheck]
-    fn test_angle_math_additive(a: Angle, b: Angle) -> bool {
-        if let (Radians(x), Radians(y)) = (a, b) {
-            (a + b).in_radians() == x + y &&
-            (a - b).in_radians() == x - y
-        } else if let (Degrees(x), Degrees(y)) = (a, b) {
-            (a + b).in_degrees() == x + y &&
-            (a - b).in_degrees() == x - y
-        } else {
-            (a + b).in_radians() == a.in_radians() + b.in_radians()
+    #[test]
+    fn test_angle_math_multiplicative() {
+        fn prop(a: Angle, x: f64) -> bool {
+            match a {
+                Radians(v) => (a * x).in_radians() == v * x &&
+                              (a / x).in_radians() == v / x,
+                Degrees(v) => (a * x).in_degrees() == v * x &&
+                              (a / x).in_degrees() == v / x
+            }
         }
+        quickcheck(prop as fn(Angle, f64) -> bool);
     }
 
-    #[quickcheck]
-    fn test_angle_normalization(angle: Angle) -> bool {
-        let v = angle.normalized();
-        let rad = v.in_radians();
-        let deg = v.in_degrees();
+    #[test]
+    fn test_angle_math_additive() {
+        fn prop(a: Angle, b: Angle) -> bool {
+            if let (Radians(x), Radians(y)) = (a, b) {
+                (a + b).in_radians() == x + y &&
+                (a - b).in_radians() == x - y
+            } else if let (Degrees(x), Degrees(y)) = (a, b) {
+                (a + b).in_degrees() == x + y &&
+                (a - b).in_degrees() == x - y
+            } else {
+                (a + b).in_radians() == a.in_radians() + b.in_radians()
+            }
+        }
+        quickcheck(prop as fn(Angle, Angle) -> bool);
+    }
 
-        0.0 <= rad && rad < 2.0 * PI &&
-        0.0 <= deg && deg < 360.0 &&
-        are_close(rad.cos(), angle.cos())
+    #[test]
+    fn test_angle_normalization() {
+        fn prop(angle: Angle) -> bool {
+            let v = angle.normalized();
+            let rad = v.in_radians();
+            let deg = v.in_degrees();
+
+            0.0 <= rad && rad < 2.0 * PI &&
+            0.0 <= deg && deg < 360.0 &&
+            are_close(rad.cos(), angle.cos())
+        }
+        quickcheck(prop as fn(Angle) -> bool);
     }
 
     #[test]

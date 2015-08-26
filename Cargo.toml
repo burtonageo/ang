@@ -7,7 +7,7 @@ documentation = "https://b52.github.io/angular-rust"
 homepage = "https://github.com/b52/angular-rust"
 repository = "https://github.com/b52/angular-rust.git"
 readme = "README.md"
-keywords = ["angle", "angular", "geometry", "orientation", "degree", "radian"]
+keywords = ["angle", "geometry", "orientation", "degree", "radian"]
 license = "MIT"
 
 [dependencies]

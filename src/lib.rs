@@ -197,7 +197,7 @@ math_additive!(Add, add);
 math_additive!(Sub, sub);
 
 macro_rules! math_multiplicative(
-    ($bound:ident, $func:ident) => (
+    ($bound:ident, $func:ident, $($t:ident),*) => (
         impl<T: $bound> $bound<T> for Angle<T> {
             type Output = Angle<T::Output>;
             fn $func(self, rhs: T) -> Self::Output {
@@ -207,11 +207,23 @@ macro_rules! math_multiplicative(
                 }
             }
         }
+
+        $(
+            impl $bound<Angle<$t>> for $t {
+                type Output = Angle<$t>;
+                fn $func(self, rhs: Angle<$t>) -> Self::Output {
+                    match rhs {
+                        Radian(v) => Radian(self.$func(v)),
+                        Degree(v) => Degree(self.$func(v))
+                    }
+                }
+            }
+        )*
     );
 );
 
-math_multiplicative!(Mul, mul);
-math_multiplicative!(Div, div);
+math_multiplicative!(Mul, mul, u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
+math_multiplicative!(Div, div, u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
 
 impl<T: Neg> Neg for Angle<T> {
     type Output = Angle<T::Output>;

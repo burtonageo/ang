@@ -3,6 +3,7 @@
 
 extern crate num;
 
+#[cfg(test)] extern crate hamcrest;
 #[cfg(test)] extern crate quickcheck;
 
 
@@ -98,69 +99,60 @@ impl<T: Float + NumCast> Angle<T> {
     pub fn sin_cos(self) -> (T, T) {
         self.in_radians().sin_cos()
     }
-
-    /*
-    /// Computes the approximate mean of a set of angles by averaging the
-    /// Cartesian coordinates of the angles on the unit circle.
-    pub fn mean(angles: &[Angle<T>]) -> Angle<T> {
-        let mut x: T = Zero::zero();
-        let mut y: T = Zero::zero();
-
-        for angle in angles.iter() {
-            let radian = angle.as_radian();
-            x = x + radian.cos();
-            y = y + radian.sin();
-        }
-
-        let n = cast(angles.len()).unwrap();
-        let a = (y/n).atan2(x/n);
-
-        Radian(a).normalize()
-    }
-
-    /// Computes the minimal unsigned distance between two normalized angles.
-    pub fn distance(&self, other: Angle<T>) -> Angle<T> {
-        // FIXME: Once associated types are implemented fix this nightmares of casts #17841
-        let pi: T = cast(f64::consts::PI).unwrap();
-        let pi2: T = pi * cast(2.0).unwrap();
-        let d = (self.as_radian() - other.as_radian()).abs();
-        Radian(pi - ((d % (pi2)) - pi).abs())
-    }*/
 }
 
-impl<T: Float> Angle<T> {
-    /// Compute the arcsine of a number. Return value is in the range of
-    /// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
-    pub fn asin(value: T) -> Option<Self> {
-        let value = value.asin();
-        if value.is_nan() {
-            None
-        } else {
-            Some(Radians(value))
-        }
+/// Compute the arcsine of a number. Return value is in the range of
+/// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
+pub fn asin<T: Float>(value: T) -> Option<Angle<T>> {
+    let value = value.asin();
+    if value.is_nan() {
+        None
+    } else {
+        Some(Radians(value))
+    }
+}
+
+/// Compute the arccosine of a number. Return value is in the range of
+/// [0, π] rad or `None` if the number is outside the range [-1, 1].
+pub fn acos<T: Float>(value: T) -> Option<Angle<T>> {
+    let value = value.acos();
+    if value.is_nan() {
+        None
+    } else {
+        Some(Radians(value))
+    }
+}
+
+/// Compute the arctangent of a number. Return value is in the range of
+/// [-π/2, π/2] rad.
+pub fn atan<T: Float>(value: T) -> Angle<T> {
+    Radians(value.atan())
+}
+
+/// Compute the four quadrant arctangent of `y` and `x`.
+pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
+    Radians(y.atan2(x))
+}
+
+/// Compute the approximate mean of a list of angles by averaging the
+/// Cartesian coordinates of the angles on the unit circle. Return the
+/// normalized angle.
+pub fn mean_angle<T: Float>(angles: &[Angle<T>]) -> Angle<T>
+{
+    let mut x = T::zero();
+    let mut y = T::zero();
+
+    for angle in angles {
+        let (sin, cos) = angle.sin_cos();
+
+        x = x + cos;
+        y = y + sin;
     }
 
-    /// Compute the arccosine of a number. Return value is in the range of
-    /// [0, π] rad or `None` if the number is outside the range [-1, 1].
-    pub fn acos(value: T) -> Option<Self> {
-        let value = value.acos();
-        if value.is_nan() {
-            None
-        } else {
-            Some(Radians(value))
-        }
-    }
+    let n = cast(angles.len()).unwrap();
+    let a = (y/n).atan2(x/n);
 
-    /// Compute the arctangent of a number. Return value is in the range of
-    /// [-π/2, π/2] rad.
-    pub fn atan(value: T) -> Self {
-        Radians(value.atan())
-    }
-
-    /// Compute the four quadrant arctangent of `y` and `x`.
-    pub fn atan2(y: T, x: T) -> Self {
-        Radians(y.atan2(x))
-    }
+    Radians(a).normalized()
 }
 
 impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
@@ -185,7 +177,6 @@ impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
         }
     }
 }
-
 
 macro_rules! math_additive(
     ($bound:ident, $func:ident) => (
@@ -255,20 +246,6 @@ impl<T: Display> Display for Angle<T> {
 
 unsafe impl<T: Send> Send for Angle<T> {  }
 
-/*
-impl<T: Encodable + Float + NumCast> Encodable for Angle<T> {
-    fn encode<S: Encoder>(&self,  s: &mut S) -> Result<(), S::Error> {
-        self.as_radian().encode(s)
-    }
-}
-
-impl<T: Decodable + Float + NumCast> Decodable for Angle<T> {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
-        let t = try!(T::decode(d));
-        Ok(Angle::Radian(t))
-    }
-}
-*/
 
 // re-exports
 pub use Angle::{Radians, Degrees};
@@ -276,10 +253,12 @@ pub use Angle::{Radians, Degrees};
 
 #[cfg(test)]
 mod tests {
+    use hamcrest::{assert_that, is, close_to};
     use num::{Float, cast};
     use quickcheck::{Arbitrary, Gen};
     use std::f64::consts::PI;
-    use super::{Angle, Radians, Degrees};
+
+    use super::*;
 
     #[quickcheck]
     fn test_angle_conversions(angle: Angle<f64>) -> bool {
@@ -318,6 +297,14 @@ mod tests {
         0.0 <= rad && rad < 2.0 * PI &&
         0.0 <= deg && deg < 360.0 &&
         are_close(rad.cos(), angle.cos())
+    }
+
+    #[test]
+    pub fn test_mean_angle() {
+        assert_that(mean_angle(&[Degrees(90.0)]).in_degrees(), is(close_to(90.0, 0.000001)));
+        assert_that(mean_angle(&[Degrees(90.0), Degrees(90.0)]).in_degrees(), is(close_to(90.0, 0.000001)));
+        assert_that(mean_angle(&[Degrees(90.0), Degrees(180.0), Degrees(270.0)]).in_degrees(), is(close_to(180.0, 0.000001)));
+        assert_that(mean_angle(&[Degrees(20.0), Degrees(350.0)]).in_degrees(), is(close_to(5.0, 0.000001)));
     }
 
     fn are_close<T: Float>(a: T, b: T) -> bool {

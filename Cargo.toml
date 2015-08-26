@@ -14,5 +14,6 @@ license = "MIT"
 num = "*"
 
 [dev-dependencies]
+hamcrest = "*"
 quickcheck = "*"
 quickcheck_macros = "*"

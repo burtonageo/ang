@@ -38,6 +38,26 @@ impl<T: NumCast> Angle<T> {
             Degrees(v) => v
         }
     }
+
+    /// An angle of 45°.
+    pub fn eighth() -> Angle<T> {
+        Degrees(cast(45).unwrap())
+    }
+
+    /// An angle of 90° (right angle).
+    pub fn quarter() -> Angle<T> {
+        Degrees(cast(90).unwrap())
+    }
+
+    /// An angle of 180° (straight).
+    pub fn half() -> Angle<T> {
+        Degrees(cast(180).unwrap())
+    }
+
+    /// An angle of 360° (perigon).
+    pub fn full() -> Angle<T> {
+        Degrees(cast(360).unwrap())
+    }
 }
 
 impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {

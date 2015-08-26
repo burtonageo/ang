@@ -10,8 +10,8 @@ type system in our favor.
 
 ## Usage
 
-Everything evolves around the `Angle<T>` type and its two manifestations
-`Degree(v)` and `Radian(v)`. This ensures proper typing and allows for safe
+Everything evolves around the `Angle<T>` type and its two variants
+`Degrees(v)` and `Radians(v)`. This ensures proper typing and allows for safe
 helper methods evolving around it.
 
 ```rust
@@ -24,8 +24,8 @@ fn calc_hypotenuse(opposite: f64, alpha: Angle) -> f64 {
     opposite / alpha.sin()
 }
 
-let a = calc_hypotenuse(SQRT_2, Radian(FRAC_PI_4));
-let b = calc_hypotenuse(SQRT_2, Degree(45.0);
+let a = calc_hypotenuse(SQRT_2, Radians(FRAC_PI_4));
+let b = calc_hypotenuse(SQRT_2, Degrees(45.0);
 
 assert!((a - 2.0).abs() < 1.0e10);
 assert!((a - b).abs() < 1.0e10);

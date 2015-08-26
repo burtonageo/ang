@@ -17,24 +17,24 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 /// Might be a value in degrees or in radians.
 #[derive(Copy, Clone, Debug)]
 pub enum Angle<T=f64> {
-    Radian(T),
-    Degree(T)
+    Radians(T),
+    Degrees(T)
 }
 
 impl<T: Copy + NumCast> Angle<T> {
     /// Yield the value encoded in radians.
     pub fn in_radians(&self) -> T {
         match *self {
-            Radian(v) => v,
-            Degree(v) => cast(cast::<T, f64>(v).unwrap() / 180.0 * PI).unwrap()
+            Radians(v) => v,
+            Degrees(v) => cast(cast::<T, f64>(v).unwrap() / 180.0 * PI).unwrap()
         }
     }
 
     /// Yield the value encoded in degrees.
     pub fn in_degrees(&self) -> T {
         match *self {
-            Radian(v) => cast(cast::<T, f64>(v).unwrap() / PI * 180.0).unwrap(),
-            Degree(v) => v
+            Radians(v) => cast(cast::<T, f64>(v).unwrap() / PI * 180.0).unwrap(),
+            Degrees(v) => v
         }
     }
 }
@@ -44,8 +44,8 @@ impl<T: Float + NumCast> Angle<T> {
     /// [0, 2π) rad.
     pub fn normalized(&self) -> Angle<T> {
         let (v, upper) = match *self {
-            Radian(v) => (v, cast(2.0 * PI).unwrap()),
-            Degree(v) => (v, cast(360.0).unwrap())
+            Radians(v) => (v, cast(2.0 * PI).unwrap()),
+            Degrees(v) => (v, cast(360.0).unwrap())
         };
 
         let normalized = if v < upper && v >= Zero::zero() {
@@ -61,8 +61,8 @@ impl<T: Float + NumCast> Angle<T> {
         };
 
         match *self {
-            Radian(_) => Radian(normalized),
-            Degree(_) => Degree(normalized)
+            Radians(_) => Radians(normalized),
+            Degrees(_) => Degrees(normalized)
         }
     }
 
@@ -124,7 +124,7 @@ impl<T: Float> Angle<T> {
         if value.is_nan() {
             None
         } else {
-            Some(Radian(value))
+            Some(Radians(value))
         }
     }
 
@@ -135,19 +135,19 @@ impl<T: Float> Angle<T> {
         if value.is_nan() {
             None
         } else {
-            Some(Radian(value))
+            Some(Radians(value))
         }
     }
 
     /// Compute the arctangent of a number. Return value is in the range of
     /// [-π/2, π/2] rad.
     pub fn atan(value: T) -> Angle<T> {
-        Radian(value.atan())
+        Radians(value.atan())
     }
 
     // Computes the four quadrant arctangent of `y` and `x`.
     pub fn atan2(y: T, x: T) -> Angle<T> {
-        Radian(y.atan2(x))
+        Radians(y.atan2(x))
     }
 }
 
@@ -160,14 +160,14 @@ impl<T: Zero> Zero for Angle<T> {
     fn is_zero(&self) -> bool {
         match *self {
             Radian(v) => v == T::zero(),
-            Degree(v) => v == T::zero()
+            Degrees(v) => v == T::zero()
         }
     }
 }*/
 
 impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
     fn eq(&self, other: &Angle<T>) -> bool {
-        if let (Degree(a), Degree(b)) = (*self, *other) {
+        if let (Degrees(a), Degrees(b)) = (*self, *other) {
             a == b
         } else {
             self.in_radians() == other.in_radians()
@@ -181,10 +181,10 @@ macro_rules! math_additive(
         impl<T: $bound + Float + NumCast> $bound for Angle<T> {
             type Output = Angle<T>;
             fn $func(self, rhs: Angle<T>) -> Self::Output {
-                if let (Degree(a), Degree(b)) = (self, rhs) {
-                    Degree(a.$func(b))
+                if let (Degrees(a), Degrees(b)) = (self, rhs) {
+                    Degrees(a.$func(b))
                 } else {
-                    Radian(self.in_radians().$func(rhs.in_radians()))
+                    Radians(self.in_radians().$func(rhs.in_radians()))
                 }
             }
         }
@@ -200,8 +200,8 @@ macro_rules! math_multiplicative(
             type Output = Angle<T::Output>;
             fn $func(self, rhs: T) -> Self::Output {
                 match self {
-                    Radian(v) => Radian(v.$func(rhs)),
-                    Degree(v) => Degree(v.$func(rhs))
+                    Radians(v) => Radians(v.$func(rhs)),
+                    Degrees(v) => Degrees(v.$func(rhs))
                 }
             }
         }
@@ -211,8 +211,8 @@ macro_rules! math_multiplicative(
                 type Output = Angle<$t>;
                 fn $func(self, rhs: Angle<$t>) -> Self::Output {
                     match rhs {
-                        Radian(v) => Radian(self.$func(v)),
-                        Degree(v) => Degree(self.$func(v))
+                        Radians(v) => Radians(self.$func(v)),
+                        Degrees(v) => Degrees(self.$func(v))
                     }
                 }
             }
@@ -227,8 +227,8 @@ impl<T: Neg> Neg for Angle<T> {
     type Output = Angle<T::Output>;
     fn neg(self) -> Self::Output {
         match self {
-            Radian(v) => Radian(-v),
-            Degree(v) => Degree(-v)
+            Radians(v) => Radians(-v),
+            Degrees(v) => Degrees(-v)
         }
     }
 }
@@ -236,8 +236,8 @@ impl<T: Neg> Neg for Angle<T> {
 impl<T: Display> Display for Angle<T> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match *self {
-            Radian(ref v) => write!(f, "{}rad", v),
-            Degree(ref v) => write!(f, "{}°", v)
+            Radians(ref v) => write!(f, "{}rad", v),
+            Degrees(ref v) => write!(f, "{}°", v)
         }
     }
 }
@@ -260,7 +260,7 @@ impl<T: Decodable + Float + NumCast> Decodable for Angle<T> {
 */
 
 // re-exports
-pub use Angle::{Radian, Degree};
+pub use Angle::{Radians, Degrees};
 
 
 #[cfg(test)]
@@ -268,29 +268,29 @@ mod tests {
     use num::{Float, cast};
     use quickcheck::{Arbitrary, Gen};
     use std::f64::consts::PI;
-    use super::{Angle, Radian, Degree};
+    use super::{Angle, Radians, Degrees};
 
     #[quickcheck]
     fn test_angle_conversions(angle: Angle<f64>) -> bool {
-        are_close(angle.in_radians(), Degree(angle.in_degrees()).in_radians())
+        are_close(angle.in_radians(), Degrees(angle.in_degrees()).in_radians())
     }
 
     #[quickcheck]
     fn test_angle_math_multiplicative(a: Angle<f64>, x: f64) -> bool {
         match a {
-            Radian(v) => (a * x).in_radians() == v * x &&
-                         (a / x).in_radians() == v / x,
-            Degree(v) => (a * x).in_degrees() == v * x &&
-                         (a / x).in_degrees() == v / x
+            Radians(v) => (a * x).in_radians() == v * x &&
+                          (a / x).in_radians() == v / x,
+            Degrees(v) => (a * x).in_degrees() == v * x &&
+                          (a / x).in_degrees() == v / x
         }
     }
 
     #[quickcheck]
     fn test_angle_math_additive(a: Angle, b: Angle) -> bool {
-        if let (Radian(x), Radian(y)) = (a, b) {
+        if let (Radians(x), Radians(y)) = (a, b) {
             (a + b).in_radians() == x + y &&
             (a - b).in_radians() == x - y
-        } else if let (Degree(x), Degree(y)) = (a, b) {
+        } else if let (Degrees(x), Degrees(y)) = (a, b) {
             (a + b).in_degrees() == x + y &&
             (a - b).in_degrees() == x - y
         } else {
@@ -317,9 +317,9 @@ mod tests {
         fn arbitrary<G: Gen>(g: &mut G) -> Self {
             let v = Arbitrary::arbitrary(g);
             if bool::arbitrary(g) {
-                Radian(v)
+                Radians(v)
             } else {
-                Degree(v)
+                Degrees(v)
             }
         }
     }

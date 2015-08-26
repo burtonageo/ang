@@ -167,9 +167,7 @@ impl<T: Zero> Zero for Angle<T> {
 
 impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
     fn eq(&self, other: &Angle<T>) -> bool {
-        if let (Radian(a), Radian(b)) = (*self, *other) {
-            a == b
-        } else if let (Degree(a), Degree(b)) = (*self, *other) {
+        if let (Degree(a), Degree(b)) = (*self, *other) {
             a == b
         } else {
             self.in_radians() == other.in_radians()

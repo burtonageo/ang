@@ -1,0 +1,18 @@
+[package]
+name = "angular"
+version = "0.1.0"
+authors = ["Oliver Mader <b52@reaktor42.de>"]
+description = "Angular types and common helper methods."
+documentation = "https://b52.github.com/angular-rust"
+homepage = "https://github.com/b52/angular-rust"
+repository = "https://github.com/b52/angular-rust.git"
+readme = "README.md"
+keywords = ["angle", "angular", "geometry", "orientation", "degree", "radian"]
+license = "MIT"
+
+[dependencies]
+num = "*"
+
+[dev-dependencies]
+quickcheck = "*"
+quickcheck_macros = "*"

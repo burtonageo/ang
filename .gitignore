@@ -1,0 +1,8 @@
+.*
+*.swp
+*.swa
+Cargo.lock
+target/
+bin/
+obj/
+

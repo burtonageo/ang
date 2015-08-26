@@ -1,0 +1,12 @@
+language: rust
+rust: nightly
+
+env:
+  global:
+    - secure: "WCyX4Yf/b3Cw2fojK+2XxYWLLcyziXZBi5T1+YfGv/rEDiO88zPa9m8kh2hBeWhLE+aY3ZRQpZJkXJclVif2gnpo9ZFMOwTg8UgjHYpyNi8WQPgscUkXurdoil4s3MNGuaLoKj0XX10f7xJfjMR7X49Dj1PO7x6do+4j3sB1pRJAXxy8N4s//54ywLxqUN/Q8Ed3cX1Z4y1j+JQ0sXIjmCyE3/6j1QhQDFsLeC2P27lZUH0ZbT0FA60JuvGS5eBZCeb0fiu4DxdS9DaHNxdF1GjHW1Qxf0vRUyDMJJCl/TBolMshlx8a7JiH844Big23y+aOKpMyz9r5AdNjPFd3mB7/sZDHoEiVJv4+FsgoR1LQ6P7D7tB7ka6/GfS217REj4zSDKaz9tu/Xls3YD7FxQQDffsEGNhfZ3aw+SzxHpd53uTqSI2lwc+PKo9Rh6y1o3/LzbXSLqyHnbGMb3l8u5shjaeMuE0+MBaBh7eMHM5KrynJFigwWGkdDxVu+3Rd87OZtfzJnkN3k/UvDwEV8fZdznDPy1ZvO5mtcIufRZj/x+/w6U8dRqcsKgvyT+QZN7FwVud1YGhwqcbXcAloT9KIw2FejoWPRFENnVdV0enMxjGZ1rXOWr0fr/AQHmQPJi2Q8umg7XzBFJpgPaF7sz4rtvEHe4qYCRX8CnBMrfY="
+
+script:
+  - cargo test --verbose
+
+after_success:
+  - ./docs.sh

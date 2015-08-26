@@ -1,4 +1,4 @@
-# angular [![Build Status](https://travis-ci.org/b52/angular-rust.svg?branch=master)](https://travis-ci.org/b52/angular-rust) [![crates.io version](http://meritbadge.herokuapp.com/angular)](https://crates.io/crates/angular)
+# angular [![Build Status](https://travis-ci.org/b52/angular-rust.svg?branch=master)](https://travis-ci.org/b52/angular-rust) [![crates.io version](http://meritbadge.herokuapp.com/angular)](https://crates.io/crates/angular) [![Coverage Status](https://coveralls.io/repos/b52/angular-rust/badge.svg?branch=travis&service=github)](https://coveralls.io/github/b52/angular-rust?branch=travis)
 
 Angular types and common helper methods to work with them while using the [Rust]
 type system in our favor.

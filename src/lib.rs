@@ -6,7 +6,7 @@ extern crate num;
 #[cfg(test)] extern crate quickcheck;
 
 
-use num::{Float, Num, NumCast, Zero, cast};
+use num::{Float, Num, NumCast, Signed, Zero, cast};
 use std::f64::consts::PI;
 use std::fmt::{Display, Formatter, Error};
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -63,6 +63,16 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
         match self {
             Radians(_) => Radians(normalized),
             Degrees(_) => Degrees(normalized)
+        }
+    }
+}
+
+impl<T: Signed> Angle<T> {
+    /// Compute the absolute angle.
+    pub fn abs(self) -> Angle<T> {
+        match self {
+            Radians(v) => Radians(v.abs()),
+            Degrees(v) => Degrees(v.abs())
         }
     }
 }

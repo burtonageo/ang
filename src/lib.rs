@@ -6,7 +6,7 @@ extern crate num;
 #[cfg(test)] extern crate quickcheck;
 
 
-use num::{Float, NumCast, Zero, cast};
+use num::{Float, Num, NumCast, Zero, cast};
 use std::f64::consts::PI;
 use std::fmt::{Display, Formatter, Error};
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -21,29 +21,29 @@ pub enum Angle<T=f64> {
     Degrees(T)
 }
 
-impl<T: Copy + NumCast> Angle<T> {
+impl<T: NumCast> Angle<T> {
     /// Yield the value encoded in radians.
-    pub fn in_radians(&self) -> T {
-        match *self {
+    pub fn in_radians(self) -> T {
+        match self {
             Radians(v) => v,
             Degrees(v) => cast(cast::<T, f64>(v).unwrap() / 180.0 * PI).unwrap()
         }
     }
 
     /// Yield the value encoded in degrees.
-    pub fn in_degrees(&self) -> T {
-        match *self {
+    pub fn in_degrees(self) -> T {
+        match self {
             Radians(v) => cast(cast::<T, f64>(v).unwrap() / PI * 180.0).unwrap(),
             Degrees(v) => v
         }
     }
 }
 
-impl<T: Float + NumCast> Angle<T> {
+impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     /// Create a new angle by normalizing the value into the range of
     /// [0, 2π) rad.
-    pub fn normalized(&self) -> Angle<T> {
-        let (v, upper) = match *self {
+    pub fn normalized(self) -> Angle<T> {
+        let (v, upper) = match self {
             Radians(v) => (v, cast(2.0 * PI).unwrap()),
             Degrees(v) => (v, cast(360.0).unwrap())
         };
@@ -60,30 +60,32 @@ impl<T: Float + NumCast> Angle<T> {
             }
         };
 
-        match *self {
+        match self {
             Radians(_) => Radians(normalized),
             Degrees(_) => Degrees(normalized)
         }
     }
+}
 
+impl<T: Float + NumCast> Angle<T> {
     /// Compute the sine of the angle.
-    pub fn sin(&self) -> T {
+    pub fn sin(self) -> T {
         self.in_radians().sin()
     }
 
     /// Compute the cosine of the angle.
-    pub fn cos(&self) -> T {
+    pub fn cos(self) -> T {
         self.in_radians().cos()
     }
 
     /// Compute the tangent of the angle.
-    pub fn tan(&self) -> T {
+    pub fn tan(self) -> T {
         self.in_radians().tan()
     }
 
     /// Simultaneously compute the sine and cosine of the number, `x`.
     /// Return `(sin(x), cos(x))`.
-    pub fn sin_cos(&self) -> (T, T) {
+    pub fn sin_cos(self) -> (T, T) {
         self.in_radians().sin_cos()
     }
 
@@ -151,19 +153,18 @@ impl<T: Float> Angle<T> {
     }
 }
 
-/*
-impl<T: Zero> Zero for Angle<T> {
-    fn zero() -> Angle<T> {
-        Radian(T::zero())
+impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
+    fn zero() -> Self {
+        Radians(T::zero())
     }
 
     fn is_zero(&self) -> bool {
-        match *self {
-            Radian(v) => v == T::zero(),
-            Degrees(v) => v == T::zero()
+        match self {
+            &Radians(ref v) => v.is_zero(),
+            &Degrees(ref v) => v.is_zero()
         }
     }
-}*/
+}
 
 impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
     fn eq(&self, other: &Angle<T>) -> bool {
@@ -178,8 +179,8 @@ impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
 
 macro_rules! math_additive(
     ($bound:ident, $func:ident) => (
-        impl<T: $bound + Float + NumCast> $bound for Angle<T> {
-            type Output = Angle<T>;
+        impl<T: $bound + Copy + NumCast> $bound for Angle<T> {
+            type Output = Angle<T::Output>;
             fn $func(self, rhs: Angle<T>) -> Self::Output {
                 if let (Degrees(a), Degrees(b)) = (self, rhs) {
                     Degrees(a.$func(b))

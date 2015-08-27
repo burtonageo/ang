@@ -60,6 +60,18 @@ impl<T: NumCast> Angle<T> {
 impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     /// Create a new angle by normalizing the value into the range of
     /// [0, 2π) rad.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use angular::*;
+    /// # use std::f64::consts::PI;
+    /// let alpha = Degrees(-90.0f64).normalized();
+    /// assert!((alpha.in_degrees() - 270.0).abs() < 1.0e-10);
+    ///
+    /// let beta = Radians(2.0 * PI).normalized();
+    /// assert!((beta.in_radians() - 0.0).abs() < 1.0e-10);
+    /// ```
     pub fn normalized(self) -> Self {
         let (v, upper) = match self {
             Radians(v) => (v, cast(2.0 * PI).unwrap()),

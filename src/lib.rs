@@ -285,20 +285,33 @@ pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
 /// Compute the approximate mean of a list of angles by averaging the
 /// Cartesian coordinates of the angles on the unit circle. Return the
 /// normalized angle.
-pub fn mean_angle<T: Float>(angles: &[Angle<T>]) -> Angle<T>
+///
+/// # Examples
+///
+/// ```rust
+/// # use angular::*;
+/// let angles = [Degrees(270.0f64), Degrees(360.0), Degrees(90.0)];
+///
+/// let mu = mean_angle(&angles);
+/// assert!(mu.min_dist(Radians(0.0)).in_radians() < 1.0e-10);
+/// ```
+pub fn mean_angle<'a, T, I>(angles: I) -> Angle<T>
+    where T: 'a + Float, I: IntoIterator<Item=&'a Angle<T>>
 {
     let mut x = T::zero();
     let mut y = T::zero();
+    let mut n = 0;
 
     for angle in angles {
         let (sin, cos) = angle.sin_cos();
 
         x = x + cos;
         y = y + sin;
+        n += 1;
     }
 
-    let n = cast(angles.len()).unwrap();
-    let a = (y/n).atan2(x/n);
+    let n = cast(n).unwrap();
+    let a = (y / n).atan2(x / n);
 
     Radians(a).normalized()
 }

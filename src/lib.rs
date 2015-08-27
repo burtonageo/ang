@@ -85,6 +85,33 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     }
 }
 
+impl<T: Float> Angle<T> {
+    /// Computes the minimal unsigned distance between two normalized angles. Returns an
+    /// angle in the range of [0, π] rad.
+    ///
+    /// ```rust
+    /// # use angular::*;
+    /// let distance = Degrees(345.0).min_dist(Degrees(15.0));
+    /// assert!((distance.in_degrees() - 30.0) < 1.0e-10);
+    /// ```
+    pub fn min_dist(self, other: Angle<T>) -> Angle<T> {
+        let pi = cast(PI).unwrap();
+        let two_pi = cast(2.0 * PI).unwrap();
+
+        let a = self.in_radians();
+        let b = other.in_radians();
+
+        let d = (a - b).abs();
+
+        // short-circout if both angles are normalized
+        Radians(if a >= T::zero() && a < two_pi && b >= T::zero() && b < two_pi {
+            d.min(two_pi - d)
+        } else {
+            pi - ((d % two_pi) - pi).abs()
+        })
+    }
+}
+
 impl<T: Signed> Angle<T> {
     /// Compute the absolute angle.
     pub fn abs(self) -> Self {
@@ -116,60 +143,6 @@ impl<T: Float + NumCast> Angle<T> {
     pub fn sin_cos(self) -> (T, T) {
         self.in_radians().sin_cos()
     }
-}
-
-/// Compute the arcsine of a number. Return value is in the range of
-/// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
-pub fn asin<T: Float>(value: T) -> Option<Angle<T>> {
-    let value = value.asin();
-    if value.is_nan() {
-        None
-    } else {
-        Some(Radians(value))
-    }
-}
-
-/// Compute the arccosine of a number. Return value is in the range of
-/// [0, π] rad or `None` if the number is outside the range [-1, 1].
-pub fn acos<T: Float>(value: T) -> Option<Angle<T>> {
-    let value = value.acos();
-    if value.is_nan() {
-        None
-    } else {
-        Some(Radians(value))
-    }
-}
-
-/// Compute the arctangent of a number. Return value is in the range of
-/// [-π/2, π/2] rad.
-pub fn atan<T: Float>(value: T) -> Angle<T> {
-    Radians(value.atan())
-}
-
-/// Compute the four quadrant arctangent of `y` and `x`.
-pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
-    Radians(y.atan2(x))
-}
-
-/// Compute the approximate mean of a list of angles by averaging the
-/// Cartesian coordinates of the angles on the unit circle. Return the
-/// normalized angle.
-pub fn mean_angle<T: Float>(angles: &[Angle<T>]) -> Angle<T>
-{
-    let mut x = T::zero();
-    let mut y = T::zero();
-
-    for angle in angles {
-        let (sin, cos) = angle.sin_cos();
-
-        x = x + cos;
-        y = y + sin;
-    }
-
-    let n = cast(angles.len()).unwrap();
-    let a = (y/n).atan2(x/n);
-
-    Radians(a).normalized()
 }
 
 impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
@@ -264,6 +237,61 @@ impl<T: Display> Display for Angle<T> {
 unsafe impl<T: Send> Send for Angle<T> {  }
 
 
+/// Compute the arcsine of a number. Return value is in the range of
+/// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
+pub fn asin<T: Float>(value: T) -> Option<Angle<T>> {
+    let value = value.asin();
+    if value.is_nan() {
+        None
+    } else {
+        Some(Radians(value))
+    }
+}
+
+/// Compute the arccosine of a number. Return value is in the range of
+/// [0, π] rad or `None` if the number is outside the range [-1, 1].
+pub fn acos<T: Float>(value: T) -> Option<Angle<T>> {
+    let value = value.acos();
+    if value.is_nan() {
+        None
+    } else {
+        Some(Radians(value))
+    }
+}
+
+/// Compute the arctangent of a number. Return value is in the range of
+/// [-π/2, π/2] rad.
+pub fn atan<T: Float>(value: T) -> Angle<T> {
+    Radians(value.atan())
+}
+
+/// Compute the four quadrant arctangent of `y` and `x`.
+pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
+    Radians(y.atan2(x))
+}
+
+/// Compute the approximate mean of a list of angles by averaging the
+/// Cartesian coordinates of the angles on the unit circle. Return the
+/// normalized angle.
+pub fn mean_angle<T: Float>(angles: &[Angle<T>]) -> Angle<T>
+{
+    let mut x = T::zero();
+    let mut y = T::zero();
+
+    for angle in angles {
+        let (sin, cos) = angle.sin_cos();
+
+        x = x + cos;
+        y = y + sin;
+    }
+
+    let n = cast(angles.len()).unwrap();
+    let a = (y/n).atan2(x/n);
+
+    Radians(a).normalized()
+}
+
+
 // re-exports
 pub use Angle::{Radians, Degrees};
 
@@ -326,6 +354,19 @@ mod tests {
             are_close(rad.cos(), angle.cos())
         }
         quickcheck(prop as fn(Angle) -> bool);
+    }
+
+    #[test]
+    fn test_angle_minimal_distance() {
+        fn prop(a: Angle, b: Angle) -> bool {
+            let d = a.min_dist(b);
+            0.0 <= d.in_radians() && d.in_radians() <= PI
+        }
+        quickcheck(prop as fn(Angle, Angle) -> bool);
+
+        assert_that(Degrees(180.0).min_dist(Degrees(0.0)).in_degrees(), is(close_to(180.0, 0.000001)));
+        assert_that(Degrees(0.1).min_dist(Degrees(359.9)).in_degrees(), is(close_to(0.2, 0.000001)));
+        assert_that(Degrees(1.0).min_dist(Degrees(2.0)).in_degrees(), is(close_to(1.0, 0.000001)));
     }
 
     #[test]

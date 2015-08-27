@@ -1,6 +1,6 @@
 [package]
 name = "angular"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Oliver Mader <b52@reaktor42.de>"]
 description = "Angular types and common helper methods."
 documentation = "https://b52.github.io/angular-rust"

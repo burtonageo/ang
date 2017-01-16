@@ -362,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_angle_math_multiplicative() {
-        fn prop(mut a: Angle, x: f64) -> bool {
+        fn prop(a: Angle, x: f64) -> bool {
             match a {
                 Radians(v) => {
                     let div_res= {
@@ -403,7 +403,7 @@ mod tests {
 
     #[test]
     fn test_angle_math_additive() {
-        fn prop(mut a: Angle, b: Angle) -> bool {
+        fn prop(a: Angle, b: Angle) -> bool {
             if let (Radians(x), Radians(y)) = (a, b) {
                 let add_res = {
                     let mut a1 = a.clone();

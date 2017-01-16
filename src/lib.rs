@@ -7,7 +7,7 @@ extern crate num;
 use num::{Float, Num, NumCast, Signed, Zero, cast};
 use std::f64::consts::PI;
 use std::fmt::{Display, Formatter, Error};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 
 /// An angle.
@@ -181,7 +181,7 @@ impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
 }
 
 macro_rules! math_additive(
-    ($bound:ident, $func:ident) => (
+    ($bound:ident, $func:ident, $assign_bound:ident, $assign_func:ident) => (
         impl<T: $bound + Copy + NumCast> $bound for Angle<T> {
             type Output = Angle<T::Output>;
             fn $func(self, rhs: Angle<T>) -> Self::Output {
@@ -192,20 +192,42 @@ macro_rules! math_additive(
                 }
             }
         }
+
+        impl<T: $assign_bound + Copy + NumCast  > $assign_bound for Angle<T> {
+            fn $assign_func(&mut self, rhs: Angle<T>) {
+                if let (Degrees(ref mut a), Degrees(b)) = (*self, rhs)  {
+                    a.$assign_func(b);
+                    *self = Degrees(*a);
+                } else {
+                    let mut val = self.in_radians();
+                    val.$assign_func(rhs.in_radians());
+                    *self = Radians(val);
+                }
+            }
+        }
     );
 );
 
-math_additive!(Add, add);
-math_additive!(Sub, sub);
+math_additive!(Add, add, AddAssign, add_assign);
+math_additive!(Sub, sub, SubAssign, sub_assign);
 
 macro_rules! math_multiplicative(
-    ($bound:ident, $func:ident, $($t:ident),*) => (
+    ($bound:ident, $func:ident, $assign_bound:ident, $assign_func:ident, $($t:ident),*) => (
         impl<T: $bound> $bound<T> for Angle<T> {
             type Output = Angle<T::Output>;
             fn $func(self, rhs: T) -> Self::Output {
                 match self {
                     Radians(v) => Radians(v.$func(rhs)),
                     Degrees(v) => Degrees(v.$func(rhs))
+                }
+            }
+        }
+
+        impl<T: $assign_bound> $assign_bound<T> for Angle<T> {
+            fn $assign_func(&mut self, rhs: T) {
+                match *self {
+                    Radians(ref mut v) => { v.$assign_func(rhs) }
+                    Degrees(ref mut v) => { v.$assign_func(rhs) }
                 }
             }
         }
@@ -224,8 +246,8 @@ macro_rules! math_multiplicative(
     );
 );
 
-math_multiplicative!(Mul, mul, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
-math_multiplicative!(Div, div, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
+math_multiplicative!(Mul, mul, MulAssign, mul_assign, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
+math_multiplicative!(Div, div, DivAssign, div_assign, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
 
 impl<T: Neg> Neg for Angle<T> {
     type Output = Angle<T::Output>;
@@ -340,12 +362,40 @@ mod tests {
 
     #[test]
     fn test_angle_math_multiplicative() {
-        fn prop(a: Angle, x: f64) -> bool {
+        fn prop(mut a: Angle, x: f64) -> bool {
             match a {
-                Radians(v) => (a * x).in_radians() == v * x &&
-                              (a / x).in_radians() == v / x,
-                Degrees(v) => (a * x).in_degrees() == v * x &&
-                              (a / x).in_degrees() == v / x
+                Radians(v) => {
+                    let div_res= {
+                        let mut a1 = a.clone();
+                        a1 /= x;
+                        a1.in_radians() == v / x
+                    };
+                    let mult_res = {
+                        let mut a1 = a.clone();
+                        a1 *= x;
+                        a1.in_radians() == v * x
+                    };
+                    (a * x).in_radians() == v * x &&
+                    (a / x).in_radians() == v / x &&
+                    div_res &&
+                    mult_res
+                }
+                Degrees(v) => {
+                    let div_res= {
+                        let mut a1 = a.clone();
+                        a1 *= x;
+                        a1.in_degrees() == v * x
+                    };
+                    let mult_res = {
+                        let mut a1 = a.clone();
+                        a1 /= x;
+                        a1.in_degrees() == v / x
+                    };
+                    (a * x).in_degrees() == v * x &&
+                    (a / x).in_degrees() == v / x &&
+                    div_res &&
+                    mult_res
+                }
             }
         }
         quickcheck(prop as fn(Angle, f64) -> bool);
@@ -353,15 +403,49 @@ mod tests {
 
     #[test]
     fn test_angle_math_additive() {
-        fn prop(a: Angle, b: Angle) -> bool {
+        fn prop(mut a: Angle, b: Angle) -> bool {
             if let (Radians(x), Radians(y)) = (a, b) {
+                let add_res = {
+                    let mut a1 = a.clone();
+                    a1 += b;
+                    a1.in_radians() == x + y
+                };
+                let sub_res = {
+                    let mut a1 = a.clone();
+                    a1 -= b;
+                    a1.in_radians() == x - y
+                };
                 (a + b).in_radians() == x + y &&
-                (a - b).in_radians() == x - y
+                (a - b).in_radians() == x - y &&
+                add_res &&
+                sub_res
             } else if let (Degrees(x), Degrees(y)) = (a, b) {
+                let add_res = {
+                    let mut a1 = a.clone();
+                    a1 += b;
+                    a1.in_degrees() == x + y
+                };
+                let sub_res = {
+                    let mut a1 = a.clone();
+                    a1 -= b;
+                    a1.in_degrees() == x - y
+                };
                 (a + b).in_degrees() == x + y &&
-                (a - b).in_degrees() == x - y
+                (a - b).in_degrees() == x - y &&
+                add_res &&
+                sub_res
             } else {
-                (a + b).in_radians() == a.in_radians() + b.in_radians()
+                let add_res = {
+                    let mut a1 = a.clone();
+                    a1 += b;
+                    a1.in_radians() == a.in_radians() + b.in_radians()
+                };
+                let sub_res = {
+                    let mut a1 = a.clone();
+                    a1 -= b;
+                    a1.in_radians() == a.in_radians() - b.in_radians()
+                };
+                (a + b).in_radians() == a.in_radians() + b.in_radians() && add_res && sub_res
             }
         }
         quickcheck(prop as fn(Angle, Angle) -> bool);

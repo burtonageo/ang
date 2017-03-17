@@ -1,12 +1,15 @@
-# angular [![Build Status](https://travis-ci.org/b52/angular-rust.svg?branch=master)](https://travis-ci.org/b52/angular-rust) [![Coverage Status](https://coveralls.io/repos/b52/angular-rust/badge.svg?branch=travis&service=github)](https://coveralls.io/github/b52/angular-rust?branch=travis) [![crates.io version](http://meritbadge.herokuapp.com/angular)](https://crates.io/crates/angular)
+# Ang
+
+Ang is a fork of the [Angular](https://crates.io/crates/angular) crate to add various
+improvements.
 
 Angular types and common helper methods to work with them while using the [Rust]
 type system in our favor.
 
 ## Features
 
-* Tested and documented
-* Safe while don't sacrificing performance and conversion related errors
+* Tested and documented,
+* Safety without sacrificing performance and conversion related errors,
 
 ## Usage
 
@@ -15,7 +18,7 @@ Everything evolves around the `Angle<T>` type and its two variants
 helper methods evolving around it.
 
 ```rust
-extern crate angular;
+extern crate ang;
 
 use angular::*;
 use std::f64::consts::{SQRT_2, FRAC_PI_4};
@@ -42,4 +45,4 @@ This software is licensed under the terms of the MIT license. Please see the
 [LICENSE](LICENSE) for full details.
 
 [Rust]: http://www.rust-lang.org/
-[API docs]: https://b52.github.io/angular-rust
+[API docs]: https://docs.rs/ang

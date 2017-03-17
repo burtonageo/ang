@@ -1,17 +1,18 @@
 [package]
-name = "angular"
-version = "0.1.1"
-authors = ["Oliver Mader <b52@reaktor42.de>"]
+name = "ang"
+version = "0.1.0"
+authors = ["George Burton <burtonageo@gmail.com>"]
 description = "Angular types and common helper methods."
-documentation = "https://b52.github.io/angular-rust"
-homepage = "https://github.com/b52/angular-rust"
-repository = "https://github.com/b52/angular-rust.git"
+documentation = "https://docs.rs/ang"
+homepage = "https://github.com/burtonageo/ang"
+repository = "https://github.com/burtonageo/ang"
 readme = "README.md"
 keywords = ["angle", "geometry", "orientation", "degree", "radian"]
 license = "MIT"
 
 [dependencies]
-num = "^0.1.27"
+approx = "^0.1.1"
+num-traits = "^0.1.37"
 
 [dev-dependencies]
 hamcrest = "^0.1.0"

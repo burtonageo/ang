@@ -1,10 +1,13 @@
-extern crate num;
+extern crate approx;
+extern crate num_traits;
 
 #[cfg(test)] extern crate hamcrest;
 #[cfg(test)] extern crate quickcheck;
 
-
-use num::{Float, Num, NumCast, Signed, Zero, cast};
+use approx::ApproxEq;
+use num_traits::{Float, Num, Signed, Zero};
+use num_traits::cast::{NumCast, cast};
+use std::cmp::Ordering;
 use std::f64::consts::PI;
 use std::fmt::{Display, Formatter, Error};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -64,7 +67,7 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # use angular::*;
+    /// # use ang::*;
     /// # use std::f64::consts::PI;
     /// let alpha = Degrees(-90.0f64).normalized();
     /// assert!((alpha.in_degrees() - 270.0).abs() < 1.0e-10);
@@ -102,7 +105,7 @@ impl<T: Float> Angle<T> {
     /// angle in the range of [0, π] rad.
     ///
     /// ```rust
-    /// # use angular::*;
+    /// # use ang::*;
     /// let distance = Degrees(345.0).min_dist(Degrees(15.0));
     /// assert!((distance.in_degrees() - 30.0) < 1.0e-10);
     /// ```
@@ -180,6 +183,38 @@ impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
     }
 }
 
+impl<T: Eq + Copy + NumCast> Eq for Angle<T> { }
+
+impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T> {
+    type Epsilon = T::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
+        match (*self, *other) {
+            (Radians(v0), Radians(v1)) => v0.relative_eq(&v1, epsilon, max_relative),
+            (_, _) => self.in_degrees().relative_eq(&other.in_degrees(), epsilon, max_relative),
+        }
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        match (*self, *other) {
+            (Radians(v0), Radians(v1)) => v0.ulps_eq(&v1, epsilon, max_ulps),
+            (_, _) => self.in_degrees().ulps_eq(&other.in_degrees(), epsilon, max_ulps),
+        }
+    }
+}
+
 macro_rules! math_additive(
     ($bound:ident, $func:ident, $assign_bound:ident, $assign_func:ident) => (
         impl<T: $bound + Copy + NumCast> $bound for Angle<T> {
@@ -246,15 +281,35 @@ macro_rules! math_multiplicative(
     );
 );
 
-math_multiplicative!(Mul, mul, MulAssign, mul_assign, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
-math_multiplicative!(Div, div, DivAssign, div_assign, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
+math_multiplicative!(Mul, mul, MulAssign, mul_assign,
+    u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
+math_multiplicative!(Div, div, DivAssign, div_assign,
+    u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
 
 impl<T: Neg> Neg for Angle<T> {
     type Output = Angle<T::Output>;
     fn neg(self) -> Self::Output {
         match self {
             Radians(v) => Radians(-v),
-            Degrees(v) => Degrees(-v)
+            Degrees(v) => Degrees(-v),
+        }
+    }
+}
+
+impl<T: PartialOrd + NumCast + Copy> PartialOrd<Angle<T>> for Angle<T> {
+    fn partial_cmp(&self, other: &Angle<T>) -> Option<Ordering> {
+        match (*self, *other) {
+            (Radians(v0), Radians(v1)) => v0.partial_cmp(&v1),
+            (_, _) => self.in_degrees().partial_cmp(&other.in_degrees()),
+        }
+    }
+}
+
+impl<T: Ord + Eq + Copy + NumCast> Ord for Angle<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (*self, *other) {
+            (Radians(v0), Radians(v1)) => v0.cmp(&v1),
+            (_, _) => self.in_degrees().cmp(&other.in_degrees()),
         }
     }
 }
@@ -311,7 +366,7 @@ pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
 /// # Examples
 ///
 /// ```rust
-/// # use angular::*;
+/// # use ang::*;
 /// let angles = [Degrees(270.0f64), Degrees(360.0), Degrees(90.0)];
 ///
 /// let mu = mean_angle(&angles);
@@ -346,7 +401,8 @@ pub use Angle::{Radians, Degrees};
 #[cfg(test)]
 mod tests {
     use hamcrest::{assert_that, is, close_to};
-    use num::{Float, cast};
+    use num_traits::Float;
+    use num_traits::cast::cast;
     use quickcheck::{Arbitrary, Gen, quickcheck};
     use std::f64::consts::PI;
 
@@ -480,10 +536,14 @@ mod tests {
 
     #[test]
     pub fn test_mean_angle() {
-        assert_that(mean_angle(&[Degrees(90.0)]).in_degrees(), is(close_to(90.0, 0.000001)));
-        assert_that(mean_angle(&[Degrees(90.0), Degrees(90.0)]).in_degrees(), is(close_to(90.0, 0.000001)));
-        assert_that(mean_angle(&[Degrees(90.0), Degrees(180.0), Degrees(270.0)]).in_degrees(), is(close_to(180.0, 0.000001)));
-        assert_that(mean_angle(&[Degrees(20.0), Degrees(350.0)]).in_degrees(), is(close_to(5.0, 0.000001)));
+        assert_that(mean_angle(&[Degrees(90.0)]).in_degrees(),
+                    is(close_to(90.0, 0.000001)));
+        assert_that(mean_angle(&[Degrees(90.0), Degrees(90.0)]).in_degrees(),
+                    is(close_to(90.0, 0.000001)));
+        assert_that(mean_angle(&[Degrees(90.0), Degrees(180.0), Degrees(270.0)]).in_degrees(),
+                    is(close_to(180.0, 0.000001)));
+        assert_that(mean_angle(&[Degrees(20.0), Degrees(350.0)]).in_degrees(),
+                    is(close_to(5.0, 0.000001)));
     }
 
     fn are_close<T: Float>(a: T, b: T) -> bool {

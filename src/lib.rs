@@ -12,12 +12,11 @@ use std::f64::consts::PI;
 use std::fmt::{Display, Formatter, Error};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-
 /// An angle.
 ///
 /// Might be a value in degrees or in radians.
-#[derive(Copy, Clone, Debug)]
-pub enum Angle<T=f64> {
+#[derive(Copy, Clone, Debug, Hash)]
+pub enum Angle<T = f64> {
     Radians(T),
     Degrees(T)
 }
@@ -175,17 +174,17 @@ impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
 
 impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
     fn eq(&self, other: &Angle<T>) -> bool {
-        if let (Degrees(a), Degrees(b)) = (*self, *other) {
-            a == b
+        if let (Degrees(ref a), Degrees(ref b)) = (*self, *other) {
+            a.eq(b)
         } else {
-            self.in_radians() == other.in_radians()
+            self.in_radians().eq(&other.in_radians())
         }
     }
 }
 
 impl<T: Eq + Copy + NumCast> Eq for Angle<T> { }
 
-impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T> {
+impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T> where T::Epsilon: Copy {
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -202,14 +201,14 @@ impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T> {
 
     fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
         match (*self, *other) {
-            (Radians(v0), Radians(v1)) => v0.relative_eq(&v1, epsilon, max_relative),
+            (Radians(ref v0), Radians(ref v1)) => v0.relative_eq(&v1, epsilon, max_relative),
             (_, _) => self.in_degrees().relative_eq(&other.in_degrees(), epsilon, max_relative),
         }
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         match (*self, *other) {
-            (Radians(v0), Radians(v1)) => v0.ulps_eq(&v1, epsilon, max_ulps),
+            (Radians(ref v0), Radians(ref v1)) => v0.ulps_eq(&v1, epsilon, max_ulps),
             (_, _) => self.in_degrees().ulps_eq(&other.in_degrees(), epsilon, max_ulps),
         }
     }
@@ -248,7 +247,7 @@ math_additive!(Sub, sub, SubAssign, sub_assign);
 
 macro_rules! math_multiplicative(
     ($bound:ident, $func:ident, $assign_bound:ident, $assign_func:ident, $($t:ident),*) => (
-        impl<T: $bound> $bound<T> for Angle<T> {
+        impl<T: $bound + Copy> $bound<T> for Angle<T> {
             type Output = Angle<T::Output>;
             fn $func(self, rhs: T) -> Self::Output {
                 match self {
@@ -296,10 +295,10 @@ impl<T: Neg> Neg for Angle<T> {
     }
 }
 
-impl<T: PartialOrd + NumCast + Copy> PartialOrd<Angle<T>> for Angle<T> {
+impl<T: PartialOrd + Copy + NumCast> PartialOrd<Angle<T>> for Angle<T> {
     fn partial_cmp(&self, other: &Angle<T>) -> Option<Ordering> {
         match (*self, *other) {
-            (Radians(v0), Radians(v1)) => v0.partial_cmp(&v1),
+            (Radians(ref v0), Radians(ref v1)) => v0.partial_cmp(&v1),
             (_, _) => self.in_degrees().partial_cmp(&other.in_degrees()),
         }
     }
@@ -308,7 +307,7 @@ impl<T: PartialOrd + NumCast + Copy> PartialOrd<Angle<T>> for Angle<T> {
 impl<T: Ord + Eq + Copy + NumCast> Ord for Angle<T> {
     fn cmp(&self, other: &Self) -> Ordering {
         match (*self, *other) {
-            (Radians(v0), Radians(v1)) => v0.cmp(&v1),
+            (Radians(ref v0), Radians(ref v1)) => v0.cmp(&v1),
             (_, _) => self.in_degrees().cmp(&other.in_degrees()),
         }
     }

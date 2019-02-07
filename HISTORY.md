@@ -1,5 +1,9 @@
 # Change log
 
+## Ang 0.3.0 (02/07/2019)
+
+* Changed: Updated dependencies.
+
 ## Ang 0.1.0 (03/17/2017)
 
 * Changed: Renamed the project, reset the version number back to 0.1.0.

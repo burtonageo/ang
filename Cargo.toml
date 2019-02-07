@@ -1,6 +1,6 @@
 [package]
 name = "ang"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["George Burton <burtonageo@gmail.com>"]
 description = "Angular types and common helper methods."
 documentation = "https://docs.rs/ang"

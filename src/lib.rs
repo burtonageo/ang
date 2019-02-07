@@ -6,7 +6,7 @@ extern crate hamcrest;
 #[cfg(test)]
 extern crate quickcheck;
 
-use approx::ApproxEq;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::cast::{cast, NumCast};
 use num_traits::{Float, Num, Signed, Zero};
 use std::cmp::Ordering;
@@ -23,7 +23,7 @@ pub enum Angle<T = f64> {
     Degrees(T),
 }
 
-impl<T: NumCast> Angle<T> {
+impl<T: Copy + NumCast> Angle<T> {
     /// Yield the value encoded in radians.
     pub fn in_radians(self) -> T {
         match self {
@@ -176,9 +176,9 @@ impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
     }
 }
 
-impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
+impl<T: Copy + NumCast + PartialEq> PartialEq for Angle<T> {
     fn eq(&self, other: &Angle<T>) -> bool {
-        if let (Degrees(ref a), Degrees(ref b)) = (*self, *other) {
+        if let (Degrees(ref a), Degrees(ref b)) = (self, other) {
             a.eq(b)
         } else {
             self.in_radians().eq(&other.in_radians())
@@ -186,32 +186,35 @@ impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
     }
 }
 
-impl<T: Eq + Copy + NumCast> Eq for Angle<T> {}
+impl<T: Copy + Eq + NumCast> Eq for Angle<T> {}
 
-impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T>
-where
-    T::Epsilon: Copy,
-{
+impl<T: AbsDiffEq + Copy + NumCast> AbsDiffEq for Angle<T> {
     type Epsilon = T::Epsilon;
 
+    #[inline]
     fn default_epsilon() -> Self::Epsilon {
         T::default_epsilon()
     }
 
+    #[inline]
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        match (*self, *other) {
+            (Radians(ref v0), Radians(ref v1)) => v0.abs_diff_eq(&v1, epsilon),
+            (_, _) => self
+                .in_degrees()
+                .abs_diff_eq(&other.in_degrees(), epsilon),
+        }
+    }
+}
+
+impl<T: RelativeEq + Copy + NumCast> RelativeEq for Angle<T> {
+    #[inline]
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
 
-    fn default_max_ulps() -> u32 {
-        T::default_max_ulps()
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
+    #[inline]
+    fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.relative_eq(&v1, epsilon, max_relative),
             (_, _) => self
@@ -219,8 +222,21 @@ where
                 .relative_eq(&other.in_degrees(), epsilon, max_relative),
         }
     }
+}
 
-    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+impl<T: UlpsEq + Copy + NumCast> UlpsEq for Angle<T> {
+    #[inline]
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    #[inline]
+    fn ulps_eq(
+        &self, 
+        other: &Self, 
+        epsilon: Self::Epsilon, 
+        max_ulps: u32
+    ) -> bool {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.ulps_eq(&v1, epsilon, max_ulps),
             (_, _) => self
@@ -415,6 +431,7 @@ where
 pub use Angle::{Degrees, Radians};
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use hamcrest::{assert_that, close_to, is};
     use num_traits::cast::cast;

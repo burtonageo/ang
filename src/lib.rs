@@ -1,15 +1,17 @@
 extern crate approx;
 extern crate num_traits;
 
-#[cfg(test)] extern crate hamcrest;
-#[cfg(test)] extern crate quickcheck;
+#[cfg(test)]
+extern crate hamcrest;
+#[cfg(test)]
+extern crate quickcheck;
 
 use approx::ApproxEq;
+use num_traits::cast::{cast, NumCast};
 use num_traits::{Float, Num, Signed, Zero};
-use num_traits::cast::{NumCast, cast};
 use std::cmp::Ordering;
 use std::f64::consts::PI;
-use std::fmt::{Display, Formatter, Error};
+use std::fmt::{Display, Error, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// An angle.
@@ -18,7 +20,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 #[derive(Copy, Clone, Debug, Hash)]
 pub enum Angle<T = f64> {
     Radians(T),
-    Degrees(T)
+    Degrees(T),
 }
 
 impl<T: NumCast> Angle<T> {
@@ -26,7 +28,7 @@ impl<T: NumCast> Angle<T> {
     pub fn in_radians(self) -> T {
         match self {
             Radians(v) => v,
-            Degrees(v) => cast(cast::<T, f64>(v).unwrap() / 180.0 * PI).unwrap()
+            Degrees(v) => cast(cast::<T, f64>(v).unwrap() / 180.0 * PI).unwrap(),
         }
     }
 
@@ -34,7 +36,7 @@ impl<T: NumCast> Angle<T> {
     pub fn in_degrees(self) -> T {
         match self {
             Radians(v) => cast(cast::<T, f64>(v).unwrap() / PI * 180.0).unwrap(),
-            Degrees(v) => v
+            Degrees(v) => v,
         }
     }
 
@@ -77,7 +79,7 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     pub fn normalized(self) -> Self {
         let (v, upper) = match self {
             Radians(v) => (v, cast(2.0 * PI).unwrap()),
-            Degrees(v) => (v, cast(360.0).unwrap())
+            Degrees(v) => (v, cast(360.0).unwrap()),
         };
 
         let normalized = if v < upper && v >= Zero::zero() {
@@ -94,7 +96,7 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
 
         match self {
             Radians(_) => Radians(normalized),
-            Degrees(_) => Degrees(normalized)
+            Degrees(_) => Degrees(normalized),
         }
     }
 }
@@ -118,11 +120,13 @@ impl<T: Float> Angle<T> {
         let d = (a - b).abs();
 
         // short-circout if both angles are normalized
-        Radians(if a >= T::zero() && a < two_pi && b >= T::zero() && b < two_pi {
-            d.min(two_pi - d)
-        } else {
-            pi - ((d % two_pi) - pi).abs()
-        })
+        Radians(
+            if a >= T::zero() && a < two_pi && b >= T::zero() && b < two_pi {
+                d.min(two_pi - d)
+            } else {
+                pi - ((d % two_pi) - pi).abs()
+            },
+        )
     }
 }
 
@@ -131,7 +135,7 @@ impl<T: Signed> Angle<T> {
     pub fn abs(self) -> Self {
         match self {
             Radians(v) => Radians(v.abs()),
-            Degrees(v) => Degrees(v.abs())
+            Degrees(v) => Degrees(v.abs()),
         }
     }
 }
@@ -167,7 +171,7 @@ impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
     fn is_zero(&self) -> bool {
         match self {
             &Radians(ref v) => v.is_zero(),
-            &Degrees(ref v) => v.is_zero()
+            &Degrees(ref v) => v.is_zero(),
         }
     }
 }
@@ -182,9 +186,12 @@ impl<T: PartialEq + Copy + NumCast> PartialEq for Angle<T> {
     }
 }
 
-impl<T: Eq + Copy + NumCast> Eq for Angle<T> { }
+impl<T: Eq + Copy + NumCast> Eq for Angle<T> {}
 
-impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T> where T::Epsilon: Copy {
+impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T>
+where
+    T::Epsilon: Copy,
+{
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -199,17 +206,26 @@ impl<T: ApproxEq + Copy + NumCast> ApproxEq for Angle<T> where T::Epsilon: Copy 
         T::default_max_ulps()
     }
 
-    fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.relative_eq(&v1, epsilon, max_relative),
-            (_, _) => self.in_degrees().relative_eq(&other.in_degrees(), epsilon, max_relative),
+            (_, _) => self
+                .in_degrees()
+                .relative_eq(&other.in_degrees(), epsilon, max_relative),
         }
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.ulps_eq(&v1, epsilon, max_ulps),
-            (_, _) => self.in_degrees().ulps_eq(&other.in_degrees(), epsilon, max_ulps),
+            (_, _) => self
+                .in_degrees()
+                .ulps_eq(&other.in_degrees(), epsilon, max_ulps),
         }
     }
 }
@@ -280,10 +296,12 @@ macro_rules! math_multiplicative(
     );
 );
 
-math_multiplicative!(Mul, mul, MulAssign, mul_assign,
-    u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
-math_multiplicative!(Div, div, DivAssign, div_assign,
-    u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64);
+math_multiplicative!(
+    Mul, mul, MulAssign, mul_assign, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64
+);
+math_multiplicative!(
+    Div, div, DivAssign, div_assign, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize, f32, f64
+);
 
 impl<T: Neg> Neg for Angle<T> {
     type Output = Angle<T::Output>;
@@ -317,13 +335,12 @@ impl<T: Display> Display for Angle<T> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match *self {
             Radians(ref v) => write!(f, "{}rad", v),
-            Degrees(ref v) => write!(f, "{}°", v)
+            Degrees(ref v) => write!(f, "{}°", v),
         }
     }
 }
 
-unsafe impl<T: Send> Send for Angle<T> {  }
-
+unsafe impl<T: Send> Send for Angle<T> {}
 
 /// Compute the arcsine of a number. Return value is in the range of
 /// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
@@ -372,7 +389,9 @@ pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
 /// assert!(mu.min_dist(Radians(0.0)).in_radians() < 1.0e-10);
 /// ```
 pub fn mean_angle<'a, T, I>(angles: I) -> Angle<T>
-    where T: 'a + Float, I: IntoIterator<Item=&'a Angle<T>>
+where
+    T: 'a + Float,
+    I: IntoIterator<Item = &'a Angle<T>>,
 {
     let mut x = T::zero();
     let mut y = T::zero();
@@ -392,17 +411,15 @@ pub fn mean_angle<'a, T, I>(angles: I) -> Angle<T>
     Radians(a).normalized()
 }
 
-
 // re-exports
-pub use Angle::{Radians, Degrees};
-
+pub use Angle::{Degrees, Radians};
 
 #[cfg(test)]
 mod tests {
-    use hamcrest::{assert_that, is, close_to};
-    use num_traits::Float;
+    use hamcrest::{assert_that, close_to, is};
     use num_traits::cast::cast;
-    use quickcheck::{Arbitrary, Gen, quickcheck};
+    use num_traits::Float;
+    use quickcheck::{quickcheck, Arbitrary, Gen};
     use std::f64::consts::PI;
 
     use super::*;
@@ -420,7 +437,7 @@ mod tests {
         fn prop(a: Angle, x: f64) -> bool {
             match a {
                 Radians(v) => {
-                    let div_res= {
+                    let div_res = {
                         let mut a1 = a.clone();
                         a1 /= x;
                         a1.in_radians() == v / x
@@ -430,13 +447,13 @@ mod tests {
                         a1 *= x;
                         a1.in_radians() == v * x
                     };
-                    (a * x).in_radians() == v * x &&
-                    (a / x).in_radians() == v / x &&
-                    div_res &&
-                    mult_res
+                    (a * x).in_radians() == v * x
+                        && (a / x).in_radians() == v / x
+                        && div_res
+                        && mult_res
                 }
                 Degrees(v) => {
-                    let div_res= {
+                    let div_res = {
                         let mut a1 = a.clone();
                         a1 *= x;
                         a1.in_degrees() == v * x
@@ -446,10 +463,10 @@ mod tests {
                         a1 /= x;
                         a1.in_degrees() == v / x
                     };
-                    (a * x).in_degrees() == v * x &&
-                    (a / x).in_degrees() == v / x &&
-                    div_res &&
-                    mult_res
+                    (a * x).in_degrees() == v * x
+                        && (a / x).in_degrees() == v / x
+                        && div_res
+                        && mult_res
                 }
             }
         }
@@ -470,10 +487,7 @@ mod tests {
                     a1 -= b;
                     a1.in_radians() == x - y
                 };
-                (a + b).in_radians() == x + y &&
-                (a - b).in_radians() == x - y &&
-                add_res &&
-                sub_res
+                (a + b).in_radians() == x + y && (a - b).in_radians() == x - y && add_res && sub_res
             } else if let (Degrees(x), Degrees(y)) = (a, b) {
                 let add_res = {
                     let mut a1 = a.clone();
@@ -485,10 +499,7 @@ mod tests {
                     a1 -= b;
                     a1.in_degrees() == x - y
                 };
-                (a + b).in_degrees() == x + y &&
-                (a - b).in_degrees() == x - y &&
-                add_res &&
-                sub_res
+                (a + b).in_degrees() == x + y && (a - b).in_degrees() == x - y && add_res && sub_res
             } else {
                 let add_res = {
                     let mut a1 = a.clone();
@@ -513,9 +524,11 @@ mod tests {
             let rad = v.in_radians();
             let deg = v.in_degrees();
 
-            0.0 <= rad && rad < 2.0 * PI &&
-            0.0 <= deg && deg < 360.0 &&
-            are_close(rad.cos(), angle.cos())
+            0.0 <= rad
+                && rad < 2.0 * PI
+                && 0.0 <= deg
+                && deg < 360.0
+                && are_close(rad.cos(), angle.cos())
         }
         quickcheck(prop as fn(Angle) -> bool);
     }
@@ -528,21 +541,38 @@ mod tests {
         }
         quickcheck(prop as fn(Angle, Angle) -> bool);
 
-        assert_that(Degrees(180.0).min_dist(Degrees(0.0)).in_degrees(), is(close_to(180.0, 0.000001)));
-        assert_that(Degrees(0.1).min_dist(Degrees(359.9)).in_degrees(), is(close_to(0.2, 0.000001)));
-        assert_that(Degrees(1.0).min_dist(Degrees(2.0)).in_degrees(), is(close_to(1.0, 0.000001)));
+        assert_that(
+            Degrees(180.0).min_dist(Degrees(0.0)).in_degrees(),
+            is(close_to(180.0, 0.000001)),
+        );
+        assert_that(
+            Degrees(0.1).min_dist(Degrees(359.9)).in_degrees(),
+            is(close_to(0.2, 0.000001)),
+        );
+        assert_that(
+            Degrees(1.0).min_dist(Degrees(2.0)).in_degrees(),
+            is(close_to(1.0, 0.000001)),
+        );
     }
 
     #[test]
     pub fn test_mean_angle() {
-        assert_that(mean_angle(&[Degrees(90.0)]).in_degrees(),
-                    is(close_to(90.0, 0.000001)));
-        assert_that(mean_angle(&[Degrees(90.0), Degrees(90.0)]).in_degrees(),
-                    is(close_to(90.0, 0.000001)));
-        assert_that(mean_angle(&[Degrees(90.0), Degrees(180.0), Degrees(270.0)]).in_degrees(),
-                    is(close_to(180.0, 0.000001)));
-        assert_that(mean_angle(&[Degrees(20.0), Degrees(350.0)]).in_degrees(),
-                    is(close_to(5.0, 0.000001)));
+        assert_that(
+            mean_angle(&[Degrees(90.0)]).in_degrees(),
+            is(close_to(90.0, 0.000001)),
+        );
+        assert_that(
+            mean_angle(&[Degrees(90.0), Degrees(90.0)]).in_degrees(),
+            is(close_to(90.0, 0.000001)),
+        );
+        assert_that(
+            mean_angle(&[Degrees(90.0), Degrees(180.0), Degrees(270.0)]).in_degrees(),
+            is(close_to(180.0, 0.000001)),
+        );
+        assert_that(
+            mean_angle(&[Degrees(20.0), Degrees(350.0)]).in_degrees(),
+            is(close_to(5.0, 0.000001)),
+        );
     }
 
     fn are_close<T: Float>(a: T, b: T) -> bool {

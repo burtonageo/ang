@@ -1,5 +1,11 @@
 # Change log
 
+## Ang 0.4.0 (11/13/2020)
+
+* Changed: Updated the project to use the Rust 2018 edition.
+* Changed: Updated dependencies to latest versions.
+* Feature: Add `Angle::{signum, is_positive, is_negative}`.
+
 ## Ang 0.3.0 (02/07/2019)
 
 * Changed: Updated dependencies.

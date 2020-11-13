@@ -1,14 +1,5 @@
-extern crate approx;
-extern crate num_traits;
-
-#[cfg(test)]
-extern crate hamcrest;
-#[cfg(test)]
-extern crate quickcheck;
-
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::cast::{cast, NumCast};
-use num_traits::{Float, Num, Signed, Zero};
+use num_traits::{cast::{cast, NumCast}, Float, Num, Signed, Zero};
 use std::cmp::Ordering;
 use std::f64::consts::PI;
 use std::fmt::{Display, Error, Formatter};
@@ -19,7 +10,9 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 /// Might be a value in degrees or in radians.
 #[derive(Copy, Clone, Debug, Hash)]
 pub enum Angle<T = f64> {
+    /// The angle value in radians.
     Radians(T),
+    /// The angle value in degrees.
     Degrees(T),
 }
 
@@ -119,7 +112,7 @@ impl<T: Float> Angle<T> {
 
         let d = (a - b).abs();
 
-        // short-circout if both angles are normalized
+        // short-circuit if both angles are normalized
         Radians(
             if a >= T::zero() && a < two_pi && b >= T::zero() && b < two_pi {
                 d.min(two_pi - d)
@@ -132,10 +125,38 @@ impl<T: Float> Angle<T> {
 
 impl<T: Signed> Angle<T> {
     /// Compute the absolute angle.
-    pub fn abs(self) -> Self {
-        match self {
-            Radians(v) => Radians(v.abs()),
-            Degrees(v) => Degrees(v.abs()),
+    pub fn abs(&self) -> Self {
+        match *self {
+            Radians(ref v) => Radians(v.abs()),
+            Degrees(ref v) => Degrees(v.abs()),
+        }
+    }
+
+    /// Returns a number that represents the sign of self.
+    ///
+    /// * `1.0` if the number is positive, `+0.0` or `Float::infinity()`
+    /// * `-1.0` if the number is negative, `-0.0` or `Float::neg_infinity()`
+    /// * `Float::nan()` if the number is `Float::nan()`
+    pub fn signum(&self) -> Self {
+        match *self {
+            Radians(ref v) => Radians(v.signum()),
+            Degrees(ref v) => Degrees(v.signum()),
+        }
+    }
+
+    /// Returns `true` if the number is positive and `false` if the number is zero or negative
+    pub fn is_positive(&self) -> bool {
+        match *self {
+            Radians(ref v) => v.is_positive(),
+            Degrees(ref v) => v.is_positive(),
+        }
+    }
+
+    /// Returns `true` if the number is negative and `false` if the number is zero or positive.
+    pub fn is_negative(&self) -> bool {
+        match *self {
+            Radians(ref v) => v.is_negative(),
+            Degrees(ref v) => v.is_negative(),
         }
     }
 }
@@ -433,9 +454,8 @@ pub use Angle::{Degrees, Radians};
 #[cfg(test)]
 #[allow(deprecated)]
 mod tests {
-    use hamcrest::{assert_that, close_to, is};
-    use num_traits::cast::cast;
-    use num_traits::Float;
+    use hamcrest2::{prelude::*, assert_that, close_to};
+    use num_traits::{cast::cast, Float};
     use quickcheck::{quickcheck, Arbitrary, Gen};
     use std::f64::consts::PI;
 
@@ -558,37 +578,37 @@ mod tests {
         }
         quickcheck(prop as fn(Angle, Angle) -> bool);
 
-        assert_that(
+        assert_that!(
             Degrees(180.0).min_dist(Degrees(0.0)).in_degrees(),
-            is(close_to(180.0, 0.000001)),
+            close_to(180.0, 0.000001)
         );
-        assert_that(
+        assert_that!(
             Degrees(0.1).min_dist(Degrees(359.9)).in_degrees(),
-            is(close_to(0.2, 0.000001)),
+            close_to(0.2, 0.000001)
         );
-        assert_that(
+        assert_that!(
             Degrees(1.0).min_dist(Degrees(2.0)).in_degrees(),
-            is(close_to(1.0, 0.000001)),
+            close_to(1.0, 0.000001)
         );
     }
 
     #[test]
     pub fn test_mean_angle() {
-        assert_that(
+        assert_that!(
             mean_angle(&[Degrees(90.0)]).in_degrees(),
-            is(close_to(90.0, 0.000001)),
+            close_to(90.0, 0.000001)
         );
-        assert_that(
+        assert_that!(
             mean_angle(&[Degrees(90.0), Degrees(90.0)]).in_degrees(),
-            is(close_to(90.0, 0.000001)),
+            close_to(90.0, 0.000001)
         );
-        assert_that(
+        assert_that!(
             mean_angle(&[Degrees(90.0), Degrees(180.0), Degrees(270.0)]).in_degrees(),
-            is(close_to(180.0, 0.000001)),
+            close_to(180.0, 0.000001)
         );
-        assert_that(
+        assert_that!(
             mean_angle(&[Degrees(20.0), Degrees(350.0)]).in_degrees(),
-            is(close_to(5.0, 0.000001)),
+            close_to(5.0, 0.000001)
         );
     }
 

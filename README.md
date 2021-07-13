@@ -35,6 +35,14 @@ assert!((a - 2.0).abs() < 1.0e10);
 assert!((a - b).abs() < 1.0e10);
 ```
 
+## Features
+
+### `std` 
+
+Enabling the `std` feature will link this crate to `std`. If this feature is disabled, then
+this crate will be built with `#![no_std]` enabled.
+
+This feature is enabled by default.
 ## Documentation
 
 For an exhaustive documentation head over to the [API docs].

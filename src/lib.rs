@@ -1,9 +1,11 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::{cast::{cast, NumCast}, Float, Num, Signed, Zero};
-use std::cmp::Ordering;
-use std::f64::consts::PI;
-use std::fmt::{Display, Error, Formatter};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::cmp::Ordering;
+use core::f64::consts::PI;
+use core::fmt::{Display, Error, Formatter};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// An angle.
 ///
@@ -490,7 +492,7 @@ mod tests {
     use hamcrest2::{prelude::*, assert_that, close_to};
     use num_traits::{cast::cast, Float};
     use quickcheck::{quickcheck, Arbitrary, Gen};
-    use std::f64::consts::PI;
+    use core::f64::consts::PI;
 
     use super::*;
 

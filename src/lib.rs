@@ -18,6 +18,7 @@ pub enum Angle<T = f64> {
 
 impl<T: Copy + NumCast> Angle<T> {
     /// Yield the value encoded in radians.
+    #[inline]
     pub fn in_radians(self) -> T {
         match self {
             Radians(v) => v,
@@ -26,6 +27,7 @@ impl<T: Copy + NumCast> Angle<T> {
     }
 
     /// Yield the value encoded in degrees.
+    #[inline]
     pub fn in_degrees(self) -> T {
         match self {
             Radians(v) => cast(cast::<T, f64>(v).unwrap() / PI * 180.0).unwrap(),
@@ -34,21 +36,25 @@ impl<T: Copy + NumCast> Angle<T> {
     }
 
     /// An angle of 45°.
+    #[inline]
     pub fn eighth() -> Angle<T> {
         Degrees(cast(45).unwrap())
     }
 
     /// An angle of 90° (right angle).
+    #[inline]
     pub fn quarter() -> Angle<T> {
         Degrees(cast(90).unwrap())
     }
 
     /// An angle of 180° (straight).
+    #[inline]
     pub fn half() -> Angle<T> {
         Degrees(cast(180).unwrap())
     }
 
     /// An angle of 360° (perigon).
+    #[inline]
     pub fn full() -> Angle<T> {
         Degrees(cast(360).unwrap())
     }
@@ -69,6 +75,7 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     /// let beta = Radians(2.0 * PI).normalized();
     /// assert!((beta.in_radians() - 0.0).abs() < 1.0e-10);
     /// ```
+    #[inline]
     pub fn normalized(self) -> Self {
         let (v, upper) = match self {
             Radians(v) => (v, cast(2.0 * PI).unwrap()),
@@ -103,6 +110,7 @@ impl<T: Float> Angle<T> {
     /// let distance = Degrees(345.0).min_dist(Degrees(15.0));
     /// assert!((distance.in_degrees() - 30.0) < 1.0e-10);
     /// ```
+    #[inline]
     pub fn min_dist(self, other: Angle<T>) -> Angle<T> {
         let pi = cast(PI).unwrap();
         let two_pi = cast(2.0 * PI).unwrap();
@@ -125,6 +133,7 @@ impl<T: Float> Angle<T> {
 
 impl<T: Signed> Angle<T> {
     /// Compute the absolute angle.
+    #[inline]
     pub fn abs(&self) -> Self {
         match *self {
             Radians(ref v) => Radians(v.abs()),
@@ -137,6 +146,7 @@ impl<T: Signed> Angle<T> {
     /// * `1.0` if the number is positive, `+0.0` or `Float::infinity()`
     /// * `-1.0` if the number is negative, `-0.0` or `Float::neg_infinity()`
     /// * `Float::nan()` if the number is `Float::nan()`
+    #[inline]
     pub fn signum(&self) -> Self {
         match *self {
             Radians(ref v) => Radians(v.signum()),
@@ -145,6 +155,7 @@ impl<T: Signed> Angle<T> {
     }
 
     /// Returns `true` if the number is positive and `false` if the number is zero or negative
+    #[inline]
     pub fn is_positive(&self) -> bool {
         match *self {
             Radians(ref v) => v.is_positive(),
@@ -153,6 +164,7 @@ impl<T: Signed> Angle<T> {
     }
 
     /// Returns `true` if the number is negative and `false` if the number is zero or positive.
+    #[inline]
     pub fn is_negative(&self) -> bool {
         match *self {
             Radians(ref v) => v.is_negative(),
@@ -163,32 +175,39 @@ impl<T: Signed> Angle<T> {
 
 impl<T: Float + NumCast> Angle<T> {
     /// Compute the sine of the angle.
+    #[inline]
     pub fn sin(self) -> T {
         self.in_radians().sin()
     }
 
     /// Compute the cosine of the angle.
+    #[inline]
     pub fn cos(self) -> T {
         self.in_radians().cos()
     }
 
     /// Compute the tangent of the angle.
+    #[inline]
     pub fn tan(self) -> T {
         self.in_radians().tan()
     }
 
     /// Simultaneously compute the sine and cosine of the number, `x`.
+    ///
     /// Return `(sin(x), cos(x))`.
+    #[inline]
     pub fn sin_cos(self) -> (T, T) {
         self.in_radians().sin_cos()
     }
 }
 
 impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
+    #[inline]
     fn zero() -> Self {
         Radians(T::zero())
     }
 
+    #[inline]
     fn is_zero(&self) -> bool {
         match self {
             &Radians(ref v) => v.is_zero(),
@@ -198,6 +217,7 @@ impl<T: Zero + Copy + NumCast> Zero for Angle<T> {
 }
 
 impl<T: Copy + NumCast + PartialEq> PartialEq for Angle<T> {
+    #[inline]
     fn eq(&self, other: &Angle<T>) -> bool {
         if let (Degrees(ref a), Degrees(ref b)) = (self, other) {
             a.eq(b)
@@ -271,6 +291,7 @@ macro_rules! math_additive(
     ($bound:ident, $func:ident, $assign_bound:ident, $assign_func:ident) => (
         impl<T: $bound + Copy + NumCast> $bound for Angle<T> {
             type Output = Angle<T::Output>;
+            #[inline]
             fn $func(self, rhs: Angle<T>) -> Self::Output {
                 if let (Degrees(a), Degrees(b)) = (self, rhs) {
                     Degrees(a.$func(b))
@@ -281,6 +302,7 @@ macro_rules! math_additive(
         }
 
         impl<T: $assign_bound + Copy + NumCast  > $assign_bound for Angle<T> {
+            #[inline]
             fn $assign_func(&mut self, rhs: Angle<T>) {
                 if let (Degrees(ref mut a), Degrees(b)) = (*self, rhs)  {
                     a.$assign_func(b);
@@ -302,6 +324,7 @@ macro_rules! math_multiplicative(
     ($bound:ident, $func:ident, $assign_bound:ident, $assign_func:ident, $($t:ident),*) => (
         impl<T: $bound + Copy> $bound<T> for Angle<T> {
             type Output = Angle<T::Output>;
+            #[inline]
             fn $func(self, rhs: T) -> Self::Output {
                 match self {
                     Radians(v) => Radians(v.$func(rhs)),
@@ -311,6 +334,7 @@ macro_rules! math_multiplicative(
         }
 
         impl<T: $assign_bound> $assign_bound<T> for Angle<T> {
+            #[inline]
             fn $assign_func(&mut self, rhs: T) {
                 match *self {
                     Radians(ref mut v) => { v.$assign_func(rhs) }
@@ -322,6 +346,7 @@ macro_rules! math_multiplicative(
         $(
             impl $bound<Angle<$t>> for $t {
                 type Output = Angle<$t>;
+                #[inline]
                 fn $func(self, rhs: Angle<$t>) -> Self::Output {
                     match rhs {
                         Radians(v) => Radians(self.$func(v)),
@@ -342,6 +367,7 @@ math_multiplicative!(
 
 impl<T: Neg> Neg for Angle<T> {
     type Output = Angle<T::Output>;
+    #[inline]
     fn neg(self) -> Self::Output {
         match self {
             Radians(v) => Radians(-v),
@@ -351,6 +377,7 @@ impl<T: Neg> Neg for Angle<T> {
 }
 
 impl<T: PartialOrd + Copy + NumCast> PartialOrd<Angle<T>> for Angle<T> {
+    #[inline]
     fn partial_cmp(&self, other: &Angle<T>) -> Option<Ordering> {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.partial_cmp(&v1),
@@ -360,6 +387,7 @@ impl<T: PartialOrd + Copy + NumCast> PartialOrd<Angle<T>> for Angle<T> {
 }
 
 impl<T: Ord + Eq + Copy + NumCast> Ord for Angle<T> {
+    #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.cmp(&v1),
@@ -381,6 +409,7 @@ unsafe impl<T: Send> Send for Angle<T> {}
 
 /// Compute the arcsine of a number. Return value is in the range of
 /// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
+#[inline]
 pub fn asin<T: Float>(value: T) -> Option<Angle<T>> {
     let value = value.asin();
     if value.is_nan() {
@@ -392,6 +421,7 @@ pub fn asin<T: Float>(value: T) -> Option<Angle<T>> {
 
 /// Compute the arccosine of a number. Return value is in the range of
 /// [0, π] rad or `None` if the number is outside the range [-1, 1].
+#[inline]
 pub fn acos<T: Float>(value: T) -> Option<Angle<T>> {
     let value = value.acos();
     if value.is_nan() {
@@ -403,11 +433,13 @@ pub fn acos<T: Float>(value: T) -> Option<Angle<T>> {
 
 /// Compute the arctangent of a number. Return value is in the range of
 /// [-π/2, π/2] rad.
+#[inline]
 pub fn atan<T: Float>(value: T) -> Angle<T> {
     Radians(value.atan())
 }
 
 /// Compute the four quadrant arctangent of `y` and `x`.
+#[inline]
 pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
     Radians(y.atan2(x))
 }
@@ -425,6 +457,7 @@ pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
 /// let mu = mean_angle(&angles);
 /// assert!(mu.min_dist(Radians(0.0)).in_radians() < 1.0e-10);
 /// ```
+#[inline]
 pub fn mean_angle<'a, T, I>(angles: I) -> Angle<T>
 where
     T: 'a + Float,

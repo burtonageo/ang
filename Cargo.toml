@@ -12,8 +12,8 @@ keywords = ["angle", "geometry", "orientation", "degree", "radian"]
 license = "MIT"
 
 [dependencies]
-approx = "0.5"
-num-traits = "0.2"
+approx = {version="0.5", default-features = false}
+num-traits = {version="0.2", default-features = false}
 
 [dev-dependencies]
 hamcrest2 = "0.3"

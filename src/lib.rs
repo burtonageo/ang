@@ -1,11 +1,17 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::{cast::{cast, NumCast}, Float, Num, Signed, Zero};
 use core::cmp::Ordering;
 use core::f64::consts::PI;
 use core::fmt::{Display, Error, Formatter};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use num_traits::{
+    cast::{cast, NumCast},
+    Num, Signed, Zero,
+};
+
+#[cfg(feature = "std")]
+use num_traits::Float;
 
 /// An angle.
 ///
@@ -103,6 +109,7 @@ impl<T: Copy + Num + NumCast + PartialOrd> Angle<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<T: Float> Angle<T> {
     /// Computes the minimal unsigned distance between two normalized angles. Returns an
     /// angle in the range of [0, π] rad.
@@ -175,6 +182,7 @@ impl<T: Signed> Angle<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<T: Float + NumCast> Angle<T> {
     /// Compute the sine of the angle.
     #[inline]
@@ -243,9 +251,7 @@ impl<T: AbsDiffEq + Copy + NumCast> AbsDiffEq for Angle<T> {
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.abs_diff_eq(&v1, epsilon),
-            (_, _) => self
-                .in_degrees()
-                .abs_diff_eq(&other.in_degrees(), epsilon),
+            (_, _) => self.in_degrees().abs_diff_eq(&other.in_degrees(), epsilon),
         }
     }
 }
@@ -257,7 +263,12 @@ impl<T: RelativeEq + Copy + NumCast> RelativeEq for Angle<T> {
     }
 
     #[inline]
-    fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.relative_eq(&v1, epsilon, max_relative),
             (_, _) => self
@@ -274,12 +285,7 @@ impl<T: UlpsEq + Copy + NumCast> UlpsEq for Angle<T> {
     }
 
     #[inline]
-    fn ulps_eq(
-        &self, 
-        other: &Self, 
-        epsilon: Self::Epsilon, 
-        max_ulps: u32
-    ) -> bool {
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         match (*self, *other) {
             (Radians(ref v0), Radians(ref v1)) => v0.ulps_eq(&v1, epsilon, max_ulps),
             (_, _) => self
@@ -411,6 +417,7 @@ unsafe impl<T: Send> Send for Angle<T> {}
 
 /// Compute the arcsine of a number. Return value is in the range of
 /// [-π/2, π/2] rad or `None` if the number is outside the range [-1, 1].
+#[cfg(feature = "std")]
 #[inline]
 pub fn asin<T: Float>(value: T) -> Option<Angle<T>> {
     let value = value.asin();
@@ -423,6 +430,7 @@ pub fn asin<T: Float>(value: T) -> Option<Angle<T>> {
 
 /// Compute the arccosine of a number. Return value is in the range of
 /// [0, π] rad or `None` if the number is outside the range [-1, 1].
+#[cfg(feature = "std")]
 #[inline]
 pub fn acos<T: Float>(value: T) -> Option<Angle<T>> {
     let value = value.acos();
@@ -435,12 +443,14 @@ pub fn acos<T: Float>(value: T) -> Option<Angle<T>> {
 
 /// Compute the arctangent of a number. Return value is in the range of
 /// [-π/2, π/2] rad.
+#[cfg(feature = "std")]
 #[inline]
 pub fn atan<T: Float>(value: T) -> Angle<T> {
     Radians(value.atan())
 }
 
 /// Compute the four quadrant arctangent of `y` and `x`.
+#[cfg(feature = "std")]
 #[inline]
 pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
     Radians(y.atan2(x))
@@ -459,6 +469,7 @@ pub fn atan2<T: Float>(y: T, x: T) -> Angle<T> {
 /// let mu = mean_angle(&angles);
 /// assert!(mu.min_dist(Radians(0.0)).in_radians() < 1.0e-10);
 /// ```
+#[cfg(feature = "std")]
 #[inline]
 pub fn mean_angle<'a, T, I>(angles: I) -> Angle<T>
 where
@@ -489,10 +500,13 @@ pub use Angle::{Degrees, Radians};
 #[cfg(test)]
 #[allow(deprecated)]
 mod tests {
-    use hamcrest2::{prelude::*, assert_that, close_to};
-    use num_traits::{cast::cast, Float};
-    use quickcheck::{quickcheck, Arbitrary, Gen};
     use core::f64::consts::PI;
+    use hamcrest2::{assert_that, close_to, prelude::*};
+    use num_traits::cast::cast;
+    use quickcheck::{quickcheck, Arbitrary, Gen};
+
+    #[cfg(feature = "std")]
+    use num_traits::Float;
 
     use super::*;
 
@@ -647,6 +661,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "std")]
     fn are_close<T: Float>(a: T, b: T) -> bool {
         (a - b).abs() < cast(1.0e-10).unwrap()
     }

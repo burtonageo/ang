@@ -1,5 +1,10 @@
 # Change log
 
+## Ang 0.6
+
+* Feature: Add a `Default` impl for `Angle`.
+* Feature: Add optional `serde` support.
+
 ## Ang 0.4.0 (11/13/2020)
 
 * Changed: Updated the project to use the Rust 2018 edition.

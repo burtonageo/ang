@@ -24,6 +24,13 @@ pub enum Angle<T = f64> {
     Degrees(T),
 }
 
+impl<T: Default> Default for Angle<T> {
+    #[inline]
+    fn default() -> Self {
+        Self::Degrees(Default::default())
+    }
+}
+
 impl<T: Copy + NumCast> Angle<T> {
     /// Yield the value encoded in radians.
     #[inline]

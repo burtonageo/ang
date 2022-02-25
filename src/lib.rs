@@ -9,6 +9,8 @@ use num_traits::{
     cast::{cast, NumCast},
     Num, Signed, Zero,
 };
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "std")]
 use num_traits::Float;
@@ -16,6 +18,7 @@ use num_traits::Float;
 /// An angle.
 ///
 /// Might be a value in degrees or in radians.
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[derive(Copy, Clone, Debug, Hash)]
 pub enum Angle<T = f64> {
     /// The angle value in radians.
